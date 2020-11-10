@@ -22,33 +22,31 @@ class Encoder(tf.keras.Model):
         self.conv_blk_1 = None
 
     def build(self, input_shape):
-        self.conv_blk_5 = VggBlock(layers=3, filters=512, kernel_size=3)
-        self.conv_blk_4 = VggBlock(layers=3, filters=512, kernel_size=3)
-        self.conv_blk_3 = VggBlock(layers=3, filters=256, kernel_size=3)
-        self.conv_blk_2 = VggBlock(layers=2, filters=128, kernel_size=3)
-        self.conv_blk_1 = VggBlock(layers=2, filters=64, kernel_size=3)
-
-        #self.set_weights(tf.keras.applications.VGG16(weights='imagenet', include_top='false').get_weights())
+        self.conv_blk_1 = VggBlock(layers=2, filters=64, kernel_size=3, name="enc_conv_blk_1")
+        self.conv_blk_2 = VggBlock(layers=2, filters=128, kernel_size=3, name="enc_conv_blk_2")
+        self.conv_blk_3 = VggBlock(layers=3, filters=256, kernel_size=3, name="enc_conv_blk_3")
+        self.conv_blk_4 = VggBlock(layers=3, filters=512, kernel_size=3, name="enc_conv_blk_4")
+        self.conv_blk_5 = VggBlock(layers=3, filters=512, kernel_size=3, name="enc_conv_blk_5")
 
     def call(self, inputs):
         x = self.conv_blk_1(inputs)
         blk_1_out = x
-        x = tf.keras.layers.MaxPooling2D((2, 2), strides=2)(x)
+        x = tf.keras.layers.MaxPooling2D((2, 2), strides=2, name="max_pool_1")(x)
 
         x = self.conv_blk_2(x)
         blk_2_out = x
-        x = tf.keras.layers.MaxPooling2D((2, 2), strides=2)(x)
+        x = tf.keras.layers.MaxPooling2D((2, 2), strides=2, name="max_pool_2")(x)
 
         x = self.conv_blk_3(x)
         blk_3_out = x
-        x = tf.keras.layers.MaxPooling2D((2, 2), strides=2)(x)
+        x = tf.keras.layers.MaxPooling2D((2, 2), strides=2, name="max_pool_3")(x)
 
         x = self.conv_blk_4(x)
         blk_4_out = x
-        x = tf.keras.layers.MaxPooling2D((2, 2), strides=2)(x)
+        x = tf.keras.layers.MaxPooling2D((2, 2), strides=2, name="max_pool_4")(x)
 
         x = self.conv_blk_5(x)
         blk_5_out = x
-        x = tf.keras.layers.MaxPooling2D((2, 2), strides=2)(x)
+        x = tf.keras.layers.MaxPooling2D((2, 2), strides=2, name="max_pool_5")(x)
 
         return blk_1_out, blk_2_out, blk_3_out, blk_4_out, blk_5_out, x

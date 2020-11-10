@@ -2,23 +2,23 @@ import tensorflow as tf
 from VGG16.EncoderDecoder import EncoderDecoder
 import matplotlib.pyplot as plt
 import LoadData
-import os
 import datetime
+import os
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+#os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
-BATCH_SIZE = 4
-IMAGE_SIZE = 256
-BUFFER_SIZE = 15000
+BATCH_SIZE = 8
+IMAGE_SIZE = 128
+BUFFER_SIZE = 5000
 AUTOTUNE = tf.data.experimental.AUTOTUNE
 SEED = 25
 N_CHANNELS = 3
 N_CLASSES = 2
-EPOCHS = 3
+EPOCHS = 2
 
 dataset = LoadData.LoadData("/home/hossein/synthesisData/training/images/*.png",
                             "/home/hossein/synthesisData/validation/images/*.png",
-                            IMAGE_SIZE, BATCH_SIZE, shuffle_buffer_size=5000, seed=123).get_dataset()
+                            IMAGE_SIZE, BATCH_SIZE, shuffle_buffer_size=BUFFER_SIZE, seed=123).get_dataset()
 print(dataset['train'])
 print(dataset['val'])
 
@@ -101,6 +101,12 @@ def show_predictions(dataset, num=1):
 
 encoderDecoder = EncoderDecoder(N_CLASSES)
 
+# freeze the encoder and initialize it weights by vgg trained on imagenet
+encoderDecoder.encoder.trainable = False
+encoderDecoder.build((None, IMAGE_SIZE, IMAGE_SIZE, 3))
+encoderDecoder.encoder.set_weights(tf.keras.applications.VGG16(include_top=False, weights='imagenet',
+                                                               input_shape=(IMAGE_SIZE, IMAGE_SIZE, 3)).get_weights())
+
 loss_function = tf.keras.losses.SparseCategoricalCrossentropy()
 optimizer = tf.keras.optimizers.Adam(learning_rate=0.0002, epsilon=1e-6)
 
@@ -145,9 +151,6 @@ batch_train_ctr = 0
 batch_test_ctr = 0
 for repeat in range(EPOCHS):
 
-    batch_train_ctr = 0
-    batch_test_ctr = 0
-
     # reset the matrices at the beginning of every epoch
     train_loss.reset_states()
     train_acc.reset_states()
@@ -164,10 +167,10 @@ for repeat in range(EPOCHS):
                               train_acc.result() * 100))
 
         with train_summary_writer.as_default():
-            tf.summary.scalar('loss', train_loss.result(), step=batch_train_ctr)
-            tf.summary.scalar('accuracy', train_acc.result(), step=batch_train_ctr)
+            tf.summary.scalar('train_loss', train_loss.result(), step=batch_train_ctr)
+            tf.summary.scalar('train_accuracy', train_acc.result(), step=batch_train_ctr)
 
-    for (x_batch, y_batch) in dataset['test']:
+    for (x_batch, y_batch) in dataset['val']:
         test_model(x_batch, y_batch)
         batch_test_ctr += 1
 
@@ -177,16 +180,10 @@ for repeat in range(EPOCHS):
                               test_acc.result() * 100))
 
         with test_summary_writer.as_default():
-            tf.summary.scalar('loss', test_loss.result(), step=batch_test_ctr)
-            tf.summary.scalar('accuracy', test_acc.result(), step=batch_test_ctr)
+            tf.summary.scalar('test_loss', test_loss.result(), step=batch_test_ctr)
+            tf.summary.scalar('test_accuracy', test_acc.result(), step=batch_test_ctr)
 
-    template = 'Epoch {}, Loss: {}, Accuracy: {}, Test Loss: {}, Test Accuracy: {}'
-    print(template.format(repeat + 1,
-                          train_loss.result(),
-                          train_acc.result() * 100,
-                          test_loss.result(),
-                          test_acc.result() * 100))
+    show_predictions(dataset['val'], num=10)
 
 show_predictions(dataset['val'], num=10)
-encoderDecoder.save("/home/hossein/imageSegmentation/lessImage")
-encoderDecoder.save_weights("/home/hossein/imageSegmentation/lessImage/weights")
+encoderDecoder.save_weights("/home/hossein/ImageSegmentation/VGG16/weights/")

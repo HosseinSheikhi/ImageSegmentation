@@ -19,15 +19,15 @@ class Decoder(tf.keras.Model):
         self.trans_conv_blk_5 = None
 
     def build(self, input_shape):
-        self.conv_blk_5 = VggBlock(layers=3, filters=512, kernel_size=3)
+        self.conv_blk_5 = VggBlock(layers=3, filters=512, kernel_size=3, name="dec_conv_blk5")
         self.trans_conv_blk_5 = tf.keras.layers.Conv2DTranspose(filters=512, kernel_size=3, strides=2, padding="same")
-        self.conv_blk_4 = VggBlock(layers=3, filters=512, kernel_size=3)
+        self.conv_blk_4 = VggBlock(layers=3, filters=512, kernel_size=3, name="dec_conv_blk4")
         self.trans_conv_blk_4 = tf.keras.layers.Conv2DTranspose(filters=512, kernel_size=3, strides=2, padding="same")
-        self.conv_blk_3 = VggBlock(layers=3, filters=256, kernel_size=3)
+        self.conv_blk_3 = VggBlock(layers=3, filters=256, kernel_size=3, name="dec_conv_blk3")
         self.trans_conv_blk_3 = tf.keras.layers.Conv2DTranspose(filters=256, kernel_size=3, strides=2, padding="same")
-        self.conv_blk_2 = VggBlock(layers=2, filters=128, kernel_size=3)
+        self.conv_blk_2 = VggBlock(layers=2, filters=128, kernel_size=3, name="dec_conv_blk2")
         self.trans_conv_blk_2 = tf.keras.layers.Conv2DTranspose(filters=128, kernel_size=3, strides=2, padding="same")
-        self.conv_blk_1 = VggBlock(layers=2, filters=64, kernel_size=3)
+        self.conv_blk_1 = VggBlock(layers=2, filters=64, kernel_size=3, name="dec_conv_blk1")
         self.trans_conv_blk_1 = tf.keras.layers.Conv2DTranspose(filters=64, kernel_size=3, strides=2, padding="same")
 
     def call(self, inputs, blk_1_out, blk_2_out, blk_3_out, blk_4_out, blk_5_out):

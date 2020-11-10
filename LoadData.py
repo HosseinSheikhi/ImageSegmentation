@@ -47,7 +47,7 @@ class LoadData:
 
         # -- Validation Dataset --#
         dataset['val'] = dataset['val'].map(self.load_image_test, num_parallel_calls=2)
-        dataset['val'] = dataset['val'].batch(self.batch_size)
+        dataset['val'] = dataset['val'].batch(self.batch_size*4)
         dataset['val'] = dataset['val'].prefetch(buffer_size=1)  # will prefetch 1 batch size
         return dataset
 
@@ -86,9 +86,11 @@ class LoadData:
                                      tf.image.ResizeMethod.NEAREST_NEIGHBOR)
 
         # some data augmentation can be done here
-        # if tf.random.uniform(()) > 0.5:
-        #     input_image = tf.image.flip_left_right(input_image)
-        #     input_mask = tf.image.flip_left_right(input_mask)
+        if tf.random.uniform(()) > 0.25:
+            input_image = tf.image.random_hue(input_image, 0.08)
+            input_image = tf.image.random_saturation(input_image, 0.6, 1.6)
+            input_image = tf.image.random_brightness(input_image, 0.05)
+            input_image = tf.image.random_contrast(input_image, 0.7, 1.3)
 
         input_image = self.normalize(input_image)
         return input_image, input_mask

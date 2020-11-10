@@ -1,8 +1,9 @@
 import tensorflow as tf
 
-class VggBlock(tf.keras.layers.Layer):
+
+class VggBlockWithBN(tf.keras.layers.Layer):
     def __init__(self, layers, filters, kernel_size, stride=1):
-        super(VggBlock, self).__init__()
+        super(VggBlockWithBN, self).__init__()
         self.kernel_size = kernel_size
         self.filters = filters
         self.stride = stride
