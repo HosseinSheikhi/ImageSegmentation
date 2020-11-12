@@ -1,10 +1,13 @@
 import tensorflow as tf
 import os
 import matplotlib.pyplot as plt
+from EncoderDecoder import EncoderDecoder
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-reconstructed_model = tf.keras.models.load_model("/home/hossein/imageSegmentation/lessImage")
-
+NUM_CLASS = 2
+IMAGE_SIZE = 128
+model = EncoderDecoder(NUM_CLASS, decodr_with_BN=False)
+model.load_weights("/home/hossein/ImageSegmentation/VGG16/weights/WithBN/decoderWithBN_0/")
 
 def parse_image(image_path: str) -> dict:
     # load the raw data from the file as a string
@@ -31,8 +34,6 @@ def display_sample(display_list):
     plt.show()
 
 
-# test_dataset = tf.data.Dataset.list_files("/home/hossein/dev_ws/*.png")
-# test_dataset = test_dataset.map(parse_image)
 img = tf.io.read_file("/home/hossein/dev_ws/first_overhead_cam.jpg")
 img = tf.image.decode_jpeg(img, channels=3)
 img = tf.image.convert_image_dtype(img, tf.uint8)
@@ -40,7 +41,7 @@ img = tf.cast(img, tf.float32) / 255.0
 img = tf.image.resize(img, (128, 128))
 img = tf.keras.backend.expand_dims(img, 0)
 
-pred = reconstructed_model.predict(img)
+pred = model(img, training=False)
 
 pred_mask = tf.argmax(pred, axis=-1)
 # pred_mask becomes [IMG_SIZE, IMG_SIZE]

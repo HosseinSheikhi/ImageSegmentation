@@ -26,9 +26,10 @@ class VggBlock(tf.keras.layers.Layer):
 
     def build(self, input_shape):
         self.conv_layers = [tf.keras.layers.Conv2D(self.filters, self.kernel_size, strides=self.stride, padding="same",
-                                                   kernel_initializer='he_normal', name=self.layer_name+"_"+str(i)) for i in range(self.layers)]
+                                                   kernel_initializer='he_normal', name=self.layer_name + "_" + str(i))
+                            for i in range(self.layers)]
 
-    def call(self, inputs):
+    def call(self, inputs, training=None):
         x = inputs
         for conv in self.conv_layers:
             x = conv(x)

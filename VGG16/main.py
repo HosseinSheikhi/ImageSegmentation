@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import LoadData
 import datetime
 import os
-
+import numpy as np
 #os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 BATCH_SIZE = 8
@@ -14,7 +14,7 @@ AUTOTUNE = tf.data.experimental.AUTOTUNE
 SEED = 25
 N_CHANNELS = 3
 N_CLASSES = 2
-EPOCHS = 2
+EPOCHS = 5
 
 dataset = LoadData.LoadData("/home/hossein/synthesisData/training/images/*.png",
                             "/home/hossein/synthesisData/validation/images/*.png",
@@ -94,12 +94,24 @@ def show_predictions(dataset, num=1):
         # and we want only 1 inference to be faster
         # so we add an additional dimension [1, IMG_SIZE, IMG_SIZE, 3]
         one_img_batch = sample_image[0][tf.newaxis, ...]
-        pred_mask = encoderDecoder(one_img_batch)
+        pred_mask = encoderDecoder(one_img_batch, training=False)
         mask = create_mask(pred_mask)
         display_sample([sample_image[0], sample_mask[0], mask[0]])
 
 
-encoderDecoder = EncoderDecoder(N_CLASSES)
+def weighted_loss_function(y_true, y_pred):
+    cross_entropy = tf.keras.backend.sparse_categorical_crossentropy(y_true, y_pred)
+    # calculate weight
+    y_true = tf.cast(y_true, dtype='float32')
+    y_true = tf.where(y_true == 0, np.dtype('float32').type(0.25), y_true)
+    weight = tf.where(y_true == 1, np.dtype('float32').type(0.75), y_true)
+    # multiply weight by cross entropy
+    weight = tf.squeeze(weight)
+    weighted_cross_entropy = tf.multiply(weight, cross_entropy)
+    return tf.reduce_mean(weighted_cross_entropy)
+
+
+encoderDecoder = EncoderDecoder(N_CLASSES, decodr_with_BN=False)
 
 # freeze the encoder and initialize it weights by vgg trained on imagenet
 encoderDecoder.encoder.trainable = False
@@ -127,8 +139,8 @@ show_predictions(dataset['val'], 1)
 @tf.function
 def train_model(images, masks):
     with tf.GradientTape() as g:
-        prediction = encoderDecoder(images)
-        loss = loss_function(masks, prediction)
+        prediction = encoderDecoder(images, training=False)
+        loss = weighted_loss_function(masks, prediction)
 
     trainable_variables = encoderDecoder.trainable_variables
     gradients = g.gradient(loss, trainable_variables)
@@ -140,7 +152,7 @@ def train_model(images, masks):
 
 @tf.function
 def test_model(images, masks):
-    predictions = encoderDecoder(images)
+    predictions = encoderDecoder(images, training=False)
     loss = loss_function(masks, predictions)
 
     test_loss.update_state(loss)
@@ -183,7 +195,6 @@ for repeat in range(EPOCHS):
             tf.summary.scalar('test_loss', test_loss.result(), step=batch_test_ctr)
             tf.summary.scalar('test_accuracy', test_acc.result(), step=batch_test_ctr)
 
-    show_predictions(dataset['val'], num=10)
+    show_predictions(dataset['val'], num=5)
+    encoderDecoder.save_weights("/home/hossein/ImageSegmentation/VGG16/weights/WithoutBN/WeightedLoss"+str(repeat+1)+"/")
 
-show_predictions(dataset['val'], num=10)
-encoderDecoder.save_weights("/home/hossein/ImageSegmentation/VGG16/weights/")
