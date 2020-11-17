@@ -1,11 +1,11 @@
 import tensorflow as tf
-from VGG16.EncoderDecoder import EncoderDecoder
+from DenseNet.FC_DenseNet import FCDenseNet
 import matplotlib.pyplot as plt
 import LoadData
 import datetime
 import os
 import numpy as np
-#os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 BATCH_SIZE = 3
 IMAGE_SIZE = 224
@@ -99,25 +99,8 @@ def show_predictions(dataset, num=1):
         display_sample([sample_image[0], sample_mask[0], mask[0]])
 
 
-def weighted_loss_function(y_true, y_pred):
-    cross_entropy = tf.keras.backend.sparse_categorical_crossentropy(y_true, y_pred)
-    # calculate weight
-    y_true = tf.cast(y_true, dtype='float32')
-    y_true = tf.where(y_true == 0, np.dtype('float32').type(0.25), y_true)
-    weight = tf.where(y_true == 1, np.dtype('float32').type(0.75), y_true)
-    # multiply weight by cross entropy
-    weight = tf.squeeze(weight)
-    weighted_cross_entropy = tf.multiply(weight, cross_entropy)
-    return tf.reduce_mean(weighted_cross_entropy)
+encoderDecoder = FCDenseNet(N_CLASSES, 56, 'Train')
 
-
-encoderDecoder = EncoderDecoder(N_CLASSES, decoder_with_BN=False)
-
-# freeze the encoder and initialize it weights by vgg trained on imagenet
-encoderDecoder.encoder.trainable = False
-encoderDecoder.build((None, IMAGE_SIZE, IMAGE_SIZE, 3))
-encoderDecoder.encoder.set_weights(tf.keras.applications.VGG16(include_top=False, weights='imagenet',
-                                                               input_shape=(IMAGE_SIZE, IMAGE_SIZE, 3)).get_weights())
 
 loss_function = tf.keras.losses.SparseCategoricalCrossentropy()
 optimizer = tf.keras.optimizers.Adam(learning_rate=0.0002, epsilon=1e-6)
@@ -182,19 +165,19 @@ for repeat in range(EPOCHS):
             tf.summary.scalar('train_loss', train_loss.result(), step=batch_train_ctr)
             tf.summary.scalar('train_accuracy', train_acc.result(), step=batch_train_ctr)
 
-    # for (x_batch, y_batch) in dataset['val']:
-    #     test_model(x_batch, y_batch)
-    #     batch_test_ctr += 1
-    #
-    #     template = 'Epoch {}, Batch{}, Test Loss: {}, Test Accuracy: {}'
-    #     print(template.format(repeat, batch_test_ctr,
-    #                           test_loss.result(),
-    #                           test_acc.result() * 100))
-    #
-    #     with test_summary_writer.as_default():
-    #         tf.summary.scalar('test_loss', test_loss.result(), step=batch_test_ctr)
-    #         tf.summary.scalar('test_accuracy', test_acc.result(), step=batch_test_ctr)
+    for (x_batch, y_batch) in dataset['val']:
+        test_model(x_batch, y_batch)
+        batch_test_ctr += 1
+
+        template = 'Epoch {}, Batch{}, Test Loss: {}, Test Accuracy: {}'
+        print(template.format(repeat, batch_test_ctr,
+                              test_loss.result(),
+                              test_acc.result() * 100))
+
+        with test_summary_writer.as_default():
+            tf.summary.scalar('test_loss', test_loss.result(), step=batch_test_ctr)
+            tf.summary.scalar('test_accuracy', test_acc.result(), step=batch_test_ctr)
 
     show_predictions(dataset['val'], num=5)
-    encoderDecoder.save_weights("/home/hossein/ImageSegmentation/VGG16/weights/WithoutBN/NaiveLoss"+str(repeat+1)+"/")
+    encoderDecoder.save_weights("/home/hossein/ImageSegmentation/DenseNet/weights/NaiveLoss"+str(repeat+1)+"/")
 

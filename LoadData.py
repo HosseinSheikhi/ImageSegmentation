@@ -85,12 +85,12 @@ class LoadData:
         input_mask = tf.image.resize(train_data['mask'], (self.image_size, self.image_size),
                                      tf.image.ResizeMethod.NEAREST_NEIGHBOR)
 
-        # some data augmentation can be done here
-        # if tf.random.uniform(()) > 0.25:
-        #     input_image = tf.image.random_hue(input_image, 0.08)
-        #     input_image = tf.image.random_saturation(input_image, 0.6, 1.6)
-        #     input_image = tf.image.random_brightness(input_image, 0.05)
-        #     input_image = tf.image.random_contrast(input_image, 0.7, 1.3)
+        #some data augmentation can be done here
+        if tf.random.uniform(()) > 0.25:
+            input_image = tf.image.random_hue(input_image, 0.08)
+            input_image = tf.image.random_saturation(input_image, 0.6, 1.6)
+            input_image = tf.image.random_brightness(input_image, 0.05)
+            input_image = tf.image.random_contrast(input_image, 0.7, 1.3)
 
         input_image = self.normalize(input_image)
         return input_image, input_mask

@@ -16,5 +16,5 @@ files = os.listdir(source)
 
 for file in files:
     image_number = int(file[6:11])
-    if (image_number % 10 == 1) or (image_number % 10 == 6):
+    if image_number % 2 == 1:
         new_path = shutil.move(f"{source}/{file}", destination)

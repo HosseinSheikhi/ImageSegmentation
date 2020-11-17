@@ -1,4 +1,5 @@
 import tensorflow as tf
+from tensorflow.keras import layers
 
 """
 Effectively, the Layer class corresponds to what we refer to in the literature as a "layer" (as in "convolution layer" 
@@ -25,14 +26,13 @@ class VggBlock(tf.keras.layers.Layer):
         self.conv_layers = None
 
     def build(self, input_shape):
-        self.conv_layers = [tf.keras.layers.Conv2D(self.filters, self.kernel_size, strides=self.stride, padding="same",
-                                                   kernel_initializer='he_normal', name=self.layer_name + "_" + str(i))
+        self.conv_layers = [layers.Conv2D(self.filters, self.kernel_size, strides=self.stride, padding="same", activation='relu',
+                                          kernel_initializer='he_normal', name=self.layer_name + "_" + str(i))
                             for i in range(self.layers)]
 
     def call(self, inputs, training=None):
         x = inputs
         for conv in self.conv_layers:
             x = conv(x)
-            x = tf.nn.relu(x)
 
         return x

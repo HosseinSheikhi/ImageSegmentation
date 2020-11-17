@@ -4,10 +4,10 @@ from VGG16.Decoder import Decoder
 
 
 class EncoderDecoder(tf.keras.Model):
-    def __init__(self, num_classes, decodr_with_BN):
+    def __init__(self, num_classes, decoder_with_BN):
         super(EncoderDecoder, self).__init__()
         self.encoder = Encoder()
-        self.decoder = Decoder(decodr_with_BN)
+        self.decoder = Decoder(decoder_with_BN)
         self.middle_conv = tf.keras.layers.Conv2D(1024, 3, strides=1, padding="same", activation="relu")
         self.last_conv = tf.keras.layers.Conv2D(num_classes, 1, strides=1, padding="same", activation="softmax")
 

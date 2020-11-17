@@ -11,8 +11,9 @@ class VggBlockWithBN(tf.keras.layers.Layer):
         self.layer_name = name
 
         self.conv_layers = [tf.keras.layers.Conv2D(self.filters, self.kernel_size, strides=self.stride, padding="SAME",
-                                              kernel_initializer='he_normal', name=self.layer_name + "_" + str(i)) for i in range(self.layers)]
-        self.bn_layers = [tf.keras.layers.BatchNormalization() for i in range(self.layers)]
+                                                   kernel_initializer='he_normal', name=self.layer_name + "_" + str(i))
+                            for i in range(self.layers)]
+        self.bn_layers = [tf.keras.layers.BatchNormalization(name=self.layer_name + "_" + str(i)) for i in range(self.layers)]
 
     def call(self, inputs, training):
         x = inputs
