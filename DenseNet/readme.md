@@ -1,37 +1,39 @@
-# Subclass Layering or Modeling?
-Effectively, the Layer class corresponds to what we refer to in the literature as a "layer" (as in "convolution layer" 
-or "recurrent layer") or as a "block" (as in "ResNet block" or "Inception block").
-Meanwhile, the Model class corresponds to what is referred to in the literature as a "model"
-(as in "deep learning model") or as a "network" (as in "deep neural network").
-
-So if you're wondering, "should I use the Layer class or the Model class?", ask yourself: will I need to call fit() on it?
-Will I need to call save() on it? If so, go with Model. If not (either because your class is just a block in a bigger 
-system, or because you are writing training & saving code yourself), use Layer.
-
-For more info for subclass layer: https://www.tensorflow.org/api_docs/python/tf/keras/layers/Layer 
-
-
-# Definition of ConvBlk, TDBlk, TUBlk
-Dense CNNs first got noticed from [Densely Connected Convolutional Neural Network](https://arxiv.org/pdf/1608.06993.pdf)
-
-This paper defines these blocks as follow:
-
-BN-ReLU-Conv1-BN-ReLU-Conv3
-
-However, we we aimed to implement the 
+#The One Hundred Layers Tiramisu
+Tensorflow 2 implementation of 
 [The One Hundred Layers Tiramisu: Fully Convolutional DenseNets for Semantic Segmentation](https://arxiv.org/pdf/1611.09326.pdf)
-paper which defines the blocks as follow:
 
-ConvBlk: BN - Relu - Conv 3x3 - Dropout 0.2
+This paper is build on top of the [Densely Connected Convolutional Networks](https://arxiv.org/pdf/1608.06993.pdf)
 
-TD (Transition Down): BN - Relu - Conv 1x1 - Dropout 0.2 - Maxpooling (2 by 2) 
+[Link](https://github.com/SimJeg/FC-DenseNet) to the original implementation by authors
 
-TU (Transition UP): 3x3 Transposed Conv stride=2
 
-# Architecture
+##Architecture
+This paper is build on top of the [Densely Connected Convolutional Neural Network](https://arxiv.org/pdf/1608.06993.pdf) 
+paper which itself is inspired with ResNets.
 
-In Table 3, we report our results for three networks with
-respectively (1) 56 layers (FC-DenseNet56), with 4 layers
-per dense block and a growth rate of 12; (2) 67 layers (FCDenseNet67) with 5 layers per dense block and a growth
-rate of 16; and (3) 103 layers (FC-DenseNet103) with a
-growth rate k = 16 (see Table 2 for details).
+The idea of DenseNets is based on the observation that if each layer is directly connected to every other layer in a
+feed-forward fashion then the network will be more accurate and easier to train.
+
+As the following figure depicts, like other classical DCNNs-based approach for semantic segmentation, Tiramisu also adopts a U-net based architecture,
+including an Encoder (down sampling path), a Bottleneck and a Decoder (Up sampling path) and also it benefits skip connections as well.
+
+![](docs/EncoderDecoder.png)
+
+Dense Blocks are shown in detail in the following figure:
+
+![](docs/DenseBlok.png)
+
+Layers, TD, and TU blocks are defined as follow:
+
+![](docs/layers.png)
+
+These three blocks are implemented in [layers](models/layer.py), [TD](models/TD_block.py) and [TU](models/TU_block.py), respectively
+ using [subclass layering method](https://keras.io/guides/making_new_layers_and_models_via_subclassing/#the-layer-class-the-combination-of-state-weights-and-some-computation).
+[Dense Blocks](models/dense_block.py) are also implemented by subclass layering method, while recursively composing [layers](models/layer.py).
+
+Tiramisu is defined in three different versions:
+* 56 layers (FC-DenseNet56), with 4 layers per dense block and a growth rate of 12
+* 67 layers (FC-DenseNet67), with 5 layers per dense block and a growth rate of 16
+* 103 layers (FC-DenseNet103) with 5 layers ped dense block and a growth rate k = 16 (see below for details).
+
+![](docs/FullLayers.png)

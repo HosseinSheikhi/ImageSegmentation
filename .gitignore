@@ -3,6 +3,11 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+DenseNet/weights/*
+DenseNet/logs/*
+VGG16/weights/*
+VGG16/logs/*
+
 # C extensions
 *.so
 #logs and weights
